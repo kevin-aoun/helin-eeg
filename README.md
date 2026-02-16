@@ -1,23 +1,38 @@
 # HELIN Knowledge Base
 
-> **Humanity's Last Interface** — BCI Capstone Project  
+> **Humanity's Last Interface** — BCI Capstone Project
 > LAU School of Engineering | February 2026
 
 ---
 
-*Disclaimer: AI was used to help write those reports, and it has been manually reviewed. Changes may apply.* 
+*Disclaimer: AI was used to help write those reports, and it has been manually reviewed. Changes may apply.*
 
 ## Project Scope
 
-
-| Objective             | Task                       | Hardware              | Data Source                           | Approach                                 |
-| --------------------- | -------------------------- | --------------------- | ------------------------------------- | ---------------------------------------- |
+| Objective                   | Task                       | Hardware              | Data Source                            | Approach                                 |
+| --------------------------- | -------------------------- | --------------------- | -------------------------------------- | ---------------------------------------- |
 | **1. Motor Imagery**  | LH/RH Classification       | g.tec Unicorn (Dubai) | Custom: 3-5 subjects × 100-150 trials | LaBraM + LoRA                            |
-| **2. Epilepsy**       | Spike Detection            | Hospital EEG          | Unlabeled patient + public datasets   | 3-stage pipeline + video artifact filter |
+| **2. Epilepsy**       | Spike Detection            | Hospital EEG          | Unlabeled patient + public datasets    | 3-stage pipeline + video artifact filter |
 | **3. Fear Detection** | 5-level threshold (0-100%) | Emotiv Epoc X         | SEED/DEAP/FACED → Custom gaming       | Transfer learning + LoRA                 |
 
-
 **Hot-swappable adapters:** All three objectives share the same LaBraM base model with task-specific LoRA adapters (~2MB each).
+
+---
+
+## Dashboard Interface
+
+![HELIN Dashboard](docs/image/README/1771259593942.png)
+
+The HELIN dashboard is a web-based interface for running motor imagery (MI) data collection sessions. It controls a PsychoPy stimulus script and displays real-time session progress. The left panel lets you configure the experiment (participant ID, session/run numbers, timing, block structure, and visual cue colors). The right panel shows a live session monitor with trial count, elapsed time, and a neurofeedback visualization.
+
+## How to Use
+
+1. **Configure the session**: specify the participant ID, session number, and run number in the Session card.
+2. **Start the session**: click "Start Session" to launch the PsychoPy stimulus script. It will stream event markers (e.g. `left_hand`, `right_hand`, `baseline`) over LSL under the stream name `MI_Markers`.
+3. **Open LabRecorder**: download [LabRecorder](https://github.com/labstreaminglayer/App-LabRecorder) and launch it. It will automatically discover available LSL streams on the network.
+4. **Select streams**: in LabRecorder, check the **MI_Markers** stream and the **EEG stream** from your device (e.g. `UN-2019.05.51` for the Unicorn).
+5. **Record**: press "Start" in LabRecorder to begin recording, then proceed with the experiment in the HELIN dashboard.
+6. **Stop**: when the session ends (or you press ESC to abort), stop LabRecorder. The XDF file is saved automatically to the LabRecorder output directory.
 
 ---
 
@@ -25,38 +40,32 @@
 
 ### 1. Hardware Specs
 
-
-| Device            | Channels        | Fs     | Resolution | Best For         | Your Access |
-| ----------------- | --------------- | ------ | ---------- | ---------------- | ----------- |
-| **g.tec Unicorn** | 8 (C3,Cz,C4...) | 250 Hz | 24-bit     | MI (Obj 1)       | ✅ Dubai     |
-| **Emotiv Epoc X** | 14              | 128 Hz | 14-bit     | Emotion (Obj 3)  | ✅ Lebanon   |
-| **Hospital EEG**  | 19-64           | 256 Hz | 16-24 bit  | Epilepsy (Obj 2) | ✅ Hospital  |
-
+| Device                  | Channels        | Fs     | Resolution | Best For         | Your Access |
+| ----------------------- | --------------- | ------ | ---------- | ---------------- | ----------- |
+| **g.tec Unicorn** | 8 (C3,Cz,C4...) | 250 Hz | 24-bit     | MI (Obj 1)       | ✅ Dubai    |
+| **Emotiv Epoc X** | 14              | 128 Hz | 14-bit     | Emotion (Obj 3)  | ✅ Lebanon  |
+| **Hospital EEG**  | 19-64           | 256 Hz | 16-24 bit  | Epilepsy (Obj 2) | ✅ Hospital |
 
 → Details: [docs/01_HARDWARE.md](docs/01_HARDWARE.md)
 
 ### 2. Frequency Bands
 
-
-| Band          | Hz     | Use Case                |
-| ------------- | ------ | ----------------------- |
+| Band                 | Hz     | Use Case                |
+| -------------------- | ------ | ----------------------- |
 | **Mu (µ)**    | 8-13   | Motor imagery (ERD/ERS) |
 | **Beta (β)**  | 13-30  | Motor planning          |
 | **Theta (θ)** | 4-8    | Emotion, memory         |
 | **Alpha (α)** | 8-13   | Relaxation, attention   |
 | **Gamma (γ)** | 30-100 | Fear, cognitive load    |
 
-
 ### 3. Model Selection
 
-
-| Model               | Parameters  | Min Samples | Expected Acc   | Status        |
-| ------------------- | ----------- | ----------- | -------------- | ------------- |
-| **EEGNet**          | 2.6K        | 200-500     | 75-82%         | ✅ Baseline    |
-| **MBHNN (no attn)** | 300K        | 1,000+      | 80-86%         | ✅ Works       |
-| **MBHNN (w/ attn)** | 500K        | 5,000+      | 67% (overfit!) | ⚠️ Avoid      |
-| **LaBraM + LoRA**   | 5.8M + ~50K | **300-500** | 80-90%         | ✅ **Primary** |
-
+| Model                     | Parameters  | Min Samples       | Expected Acc   | Status              |
+| ------------------------- | ----------- | ----------------- | -------------- | ------------------- |
+| **EEGNet**          | 2.6K        | 200-500           | 75-82%         | ✅ Baseline         |
+| **MBHNN (no attn)** | 300K        | 1,000+            | 80-86%         | ✅ Works            |
+| **MBHNN (w/ attn)** | 500K        | 5,000+            | 67% (overfit!) | ⚠️ Avoid          |
+| **LaBraM + LoRA**   | 5.8M + ~50K | **300-500** | 80-90%         | ✅**Primary** |
 
 **⚠️ Attention fails with <5,000 samples** → Use LaBraM + LoRA instead
 
@@ -64,13 +73,11 @@
 
 ### 4. LaBraM Data Requirements
 
-
-| Scenario           | Samples     | Subjects | Expected Result |
-| ------------------ | ----------- | -------- | --------------- |
+| Scenario                 | Samples     | Subjects | Expected Result |
+| ------------------------ | ----------- | -------- | --------------- |
 | **Minimum viable** | 300-500     | 3-5      | ~75-80%         |
 | **Comfortable**    | 500-1,000   | 5-10     | ~80-85%         |
 | **Optimal**        | 1,000-2,000 | 10-15    | ~85-90%         |
-
 
 *LaBraM works with small data because it's pre-trained on 2,500 hours of EEG*
 
@@ -78,9 +85,8 @@
 
 ### 5. Public Datasets
 
-
-| Dataset       | Subjects | Ch  | Fs      | Task              | Link                                                  |
-| ------------- | -------- | --- | ------- | ----------------- | ----------------------------------------------------- |
+| Dataset             | Subjects | Ch  | Fs      | Task              | Link                                               |
+| ------------------- | -------- | --- | ------- | ----------------- | -------------------------------------------------- |
 | **BCI IV 2a** | 9        | 22  | 250 Hz  | MI (4-class)      | [BNCI](http://bnci-horizon-2020.eu/)                  |
 | **PhysioNet** | 109      | 64  | 160 Hz  | MI                | [PhysioNet](https://physionet.org/content/eegmmidb/)  |
 | **SEED**      | 15       | 62  | 1000 Hz | Emotion (3)       | [BCMI](https://bcmi.sjtu.edu.cn/home/seed/)           |
@@ -91,40 +97,35 @@
 | **CHB-MIT**   | 23       | 23  | 256 Hz  | Epilepsy (198 sz) | [PhysioNet](https://physionet.org/content/chbmit/)    |
 | **TUSZ**      | 592      | Var | 250+ Hz | Epilepsy (types)  | [TUH](https://isip.piconepress.com/projects/tuh_eeg/) |
 
-
 ---
 
 ## Document Index
 
-
-| #   | Document                                         | Covers                                                      |
-| --- | ------------------------------------------------ | ----------------------------------------------------------- |
-| 01  | [HARDWARE.md](docs/01_HARDWARE.md)               | Unicorn vs Emotiv, channel mapping, setup                   |
-| 02  | [DATA_COLLECTION.md](docs/02_DATA_COLLECTION.md) | MI protocol, trial structure, markers                       |
-| 03  | [PREPROCESSING.md](docs/03_PREPROCESSING.md)     | Filters, ICA, normalization, segmentation                   |
-| 04  | [MODEL_SELECTION.md](docs/04_MODEL_SELECTION.md) | EEGNet, MBHNN, decision tree, attention warning             |
-| 05  | [LABRAM.md](docs/05_LABRAM.md)                   | Foundation model, LoRA fine-tuning, data efficiency         |
-| 06  | [EMOTION_FEAR.md](docs/06_EMOTION_FEAR.md)       | 5-level fear thresholding, SEED/DEAP/FACED                  |
-| 07  | [EPILEPSY.md](docs/07_EPILEPSY.md)               | 3-stage pipeline, video artifact filtering, public datasets |
-| 08  | [LESSONS_LEARNED.md](docs/08_LESSONS_LEARNED.md) | LoRA cookbook, attention overfitting analysis               |
-
+| #  | Document                                      | Covers                                                      |
+| -- | --------------------------------------------- | ----------------------------------------------------------- |
+| 01 | [HARDWARE.md](docs/01_HARDWARE.md)               | Unicorn vs Emotiv, channel mapping, setup                   |
+| 02 | [DATA_COLLECTION.md](docs/02_DATA_COLLECTION.md) | MI protocol, trial structure, markers                       |
+| 03 | [PREPROCESSING.md](docs/03_PREPROCESSING.md)     | Filters, ICA, normalization, segmentation                   |
+| 04 | [MODEL_SELECTION.md](docs/04_MODEL_SELECTION.md) | EEGNet, MBHNN, decision tree, attention warning             |
+| 05 | [LABRAM.md](docs/05_LABRAM.md)                   | Foundation model, LoRA fine-tuning, data efficiency         |
+| 06 | [EMOTION_FEAR.md](docs/06_EMOTION_FEAR.md)       | 5-level fear thresholding, SEED/DEAP/FACED                  |
+| 07 | [EPILEPSY.md](docs/07_EPILEPSY.md)               | 3-stage pipeline, video artifact filtering, public datasets |
+| 08 | [LESSONS_LEARNED.md](docs/08_LESSONS_LEARNED.md) | LoRA cookbook, attention overfitting analysis               |
 
 ---
 
 ## Key Decisions
 
-
-| Decision          | Choice                | Rationale                                               |
-| ----------------- | --------------------- | ------------------------------------------------------- |
+| Decision          | Choice                      | Rationale                                               |
+| ----------------- | --------------------------- | ------------------------------------------------------- |
 | Foundation model  | **LaBraM-Base**       | 5.8M params fits Colab; works with ~500 samples         |
 | Fine-tuning       | **LoRA**              | ~60% memory, same accuracy (Thinking Machines cookbook) |
 | LoRA target       | **ALL layers**        | Attention-only underperforms (critical!)                |
-| LoRA LR           | **10× FullFT**        | Required for matching full fine-tuning performance      |
+| LoRA LR           | **10× FullFT**       | Required for matching full fine-tuning performance      |
 | MI hardware       | **Unicorn**           | C3/C4/Cz optimal for motor cortex                       |
 | Fear task         | **5-level threshold** | 0-20%, 20-40%, 40-60%, 60-80%, 80-100%                  |
-| Epilepsy pipeline | **3-stage**           | Heuristic → Video artifact filter → ML                  |
+| Epilepsy pipeline | **3-stage**           | Heuristic → Video artifact filter → ML                |
 | Adapters          | **Hot-swappable**     | MI, Fear, Epilepsy share same base (~2MB each)          |
-
 
 ---
 
