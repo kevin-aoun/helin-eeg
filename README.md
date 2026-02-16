@@ -97,50 +97,6 @@ The HELIN dashboard is a web-based interface for running motor imagery (MI) data
 | **CHB-MIT**   | 23       | 23  | 256 Hz  | Epilepsy (198 sz) | [PhysioNet](https://physionet.org/content/chbmit/)    |
 | **TUSZ**      | 592      | Var | 250+ Hz | Epilepsy (types)  | [TUH](https://isip.piconepress.com/projects/tuh_eeg/) |
 
----
-
-## Document Index
-
-| #  | Document                                      | Covers                                                      |
-| -- | --------------------------------------------- | ----------------------------------------------------------- |
-| 01 | [HARDWARE.md](docs/01_HARDWARE.md)               | Unicorn vs Emotiv, channel mapping, setup                   |
-| 02 | [DATA_COLLECTION.md](docs/02_DATA_COLLECTION.md) | MI protocol, trial structure, markers                       |
-| 03 | [PREPROCESSING.md](docs/03_PREPROCESSING.md)     | Filters, ICA, normalization, segmentation                   |
-| 04 | [MODEL_SELECTION.md](docs/04_MODEL_SELECTION.md) | EEGNet, MBHNN, decision tree, attention warning             |
-| 05 | [LABRAM.md](docs/05_LABRAM.md)                   | Foundation model, LoRA fine-tuning, data efficiency         |
-| 06 | [EMOTION_FEAR.md](docs/06_EMOTION_FEAR.md)       | 5-level fear thresholding, SEED/DEAP/FACED                  |
-| 07 | [EPILEPSY.md](docs/07_EPILEPSY.md)               | 3-stage pipeline, video artifact filtering, public datasets |
-| 08 | [LESSONS_LEARNED.md](docs/08_LESSONS_LEARNED.md) | LoRA cookbook, attention overfitting analysis               |
-
----
-
-## Key Decisions
-
-| Decision          | Choice                      | Rationale                                               |
-| ----------------- | --------------------------- | ------------------------------------------------------- |
-| Foundation model  | **LaBraM-Base**       | 5.8M params fits Colab; works with ~500 samples         |
-| Fine-tuning       | **LoRA**              | ~60% memory, same accuracy (Thinking Machines cookbook) |
-| LoRA target       | **ALL layers**        | Attention-only underperforms (critical!)                |
-| LoRA LR           | **10× FullFT**       | Required for matching full fine-tuning performance      |
-| MI hardware       | **Unicorn**           | C3/C4/Cz optimal for motor cortex                       |
-| Fear task         | **5-level threshold** | 0-20%, 20-40%, 40-60%, 60-80%, 80-100%                  |
-| Epilepsy pipeline | **3-stage**           | Heuristic → Video artifact filter → ML                |
-| Adapters          | **Hot-swappable**     | MI, Fear, Epilepsy share same base (~2MB each)          |
-
----
-
-## Compute Budget
-
-```
-Total: ~3,000 Google Colab compute units
-
-Allocation:
-├── LaBraM MI fine-tuning:      ~800 units
-├── LaBraM Emotion fine-tuning: ~600 units
-├── Epilepsy experiments:       ~400 units
-├── Hyperparameter tuning:      ~600 units
-└── Buffer/ablations:           ~600 units
-```
 
 ---
 
