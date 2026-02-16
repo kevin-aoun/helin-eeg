@@ -19,6 +19,35 @@
 
 ---
 
+## Getting Started
+
+Project is fully open source and local.
+
+```bash
+git clone https://github.com/kevin-aoun/helin-eeg/
+cd helin-eeg
+```
+
+### Backend (Python)
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate        # Windows
+pip install -r requirements.txt
+```
+
+### Frontend (Next.js)
+
+```bash
+cd src/frontend
+npm install
+npm run dev
+```
+
+The dashboard will be available at `http://localhost:3000`.
+
+---
+
 ## Dashboard Interface
 
 ![HELIN Dashboard](assets/image/README/1771259593942.png)
