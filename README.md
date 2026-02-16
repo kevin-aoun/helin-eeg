@@ -21,7 +21,7 @@
 
 ## Dashboard Interface
 
-![HELIN Dashboard](docs/image/README/1771259593942.png)
+![HELIN Dashboard](assets/image/README/1771259593942.png)
 
 The HELIN dashboard is a web-based interface for running motor imagery (MI) data collection sessions. It controls a PsychoPy stimulus script and displays real-time session progress. The left panel lets you configure the experiment (participant ID, session/run numbers, timing, block structure, and visual cue colors). The right panel shows a live session monitor with trial count, elapsed time, and a neurofeedback visualization.
 
@@ -36,19 +36,7 @@ The HELIN dashboard is a web-based interface for running motor imagery (MI) data
 
 ---
 
-## Quick Reference Tables
-
-### 1. Hardware Specs
-
-| Device                  | Channels        | Fs     | Resolution | Best For         | Your Access |
-| ----------------------- | --------------- | ------ | ---------- | ---------------- | ----------- |
-| **g.tec Unicorn** | 8 (C3,Cz,C4...) | 250 Hz | 24-bit     | MI (Obj 1)       | ✅ Dubai    |
-| **Emotiv Epoc X** | 14              | 128 Hz | 14-bit     | Emotion (Obj 3)  | ✅ Lebanon  |
-| **Hospital EEG**  | 19-64           | 256 Hz | 16-24 bit  | Epilepsy (Obj 2) | ✅ Hospital |
-
-→ Details: [docs/01_HARDWARE.md](docs/01_HARDWARE.md)
-
-### 2. Frequency Bands
+### 1. Frequency Bands
 
 | Band                 | Hz     | Use Case                |
 | -------------------- | ------ | ----------------------- |
@@ -58,7 +46,7 @@ The HELIN dashboard is a web-based interface for running motor imagery (MI) data
 | **Alpha (α)** | 8-13   | Relaxation, attention   |
 | **Gamma (γ)** | 30-100 | Fear, cognitive load    |
 
-### 3. Model Selection
+### 2. Model Selection
 
 | Model                     | Parameters  | Min Samples       | Expected Acc   | Status              |
 | ------------------------- | ----------- | ----------------- | -------------- | ------------------- |
@@ -69,9 +57,7 @@ The HELIN dashboard is a web-based interface for running motor imagery (MI) data
 
 **⚠️ Attention fails with <5,000 samples** → Use LaBraM + LoRA instead
 
-→ Details: [docs/04_MODEL_SELECTION.md](docs/04_MODEL_SELECTION.md)
-
-### 4. LaBraM Data Requirements
+### 3. LaBraM Data Requirements
 
 | Scenario                 | Samples     | Subjects | Expected Result |
 | ------------------------ | ----------- | -------- | --------------- |
@@ -80,8 +66,6 @@ The HELIN dashboard is a web-based interface for running motor imagery (MI) data
 | **Optimal**        | 1,000-2,000 | 10-15    | ~85-90%         |
 
 *LaBraM works with small data because it's pre-trained on 2,500 hours of EEG*
-
-→ Details: [docs/05_LABRAM.md](docs/05_LABRAM.md)
 
 ### 5. Public Datasets
 
@@ -104,8 +88,8 @@ The HELIN dashboard is a web-based interface for running motor imagery (MI) data
 
 1. **Lawhern et al. (2018)** — EEGNet — [DOI](https://doi.org/10.1088/1741-2552/aace8c)
 2. **Ma et al. (2022)** — MBHNN — [DOI](https://doi.org/10.1016/j.bspc.2022.103718)
-3. **Jiang et al. (2024)** — LaBraM — [arXiv](https://arxiv.org/abs/2405.18765) ⭐
-4. **Schulman et al. (2025)** — LoRA Without Regret — [Thinking Machines](https://thinkingmachines.ai/blog/lora/) ⭐
+3. **Jiang et al. (2024)** — LaBraM — [arXiv](https://arxiv.org/abs/2405.18765) *
+4. **Schulman et al. (2025)** — LoRA Without Regret — [Thinking Machines](https://thinkingmachines.ai/blog/lora/) *
 5. **Hu et al. (2021)** — LoRA — [arXiv](https://arxiv.org/abs/2106.09685)
 6. **Koelstra et al. (2012)** — DEAP — [IEEE](https://doi.org/10.1109/T-AFFC.2011.15)
 7. **Li et al. (2023)** — FACED — [Scientific Data](https://doi.org/10.1038/s41597-023-02650-w)
