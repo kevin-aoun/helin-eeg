@@ -1,7 +1,7 @@
 # HELIN Knowledge Base
 
-> **Humanity's Last Interface** — BCI Capstone Project
-> LAU School of Engineering | February 2026
+> **Humanity's Last Interface** — Adaptive BCI System
+> Applications: Gaming | Epilepsy Detection | Motor Imagery 
 
 ---
 
