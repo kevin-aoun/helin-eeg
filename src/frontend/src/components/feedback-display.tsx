@@ -60,7 +60,14 @@ export function FeedbackDisplay({ isRunning }: FeedbackDisplayProps) {
   useEffect(() => {
     if (isRunning) {
       pollingRef.current = setInterval(pollFeedback, 500);
-      pollFeedback();
+      const initial = setTimeout(pollFeedback, 0);
+      return () => {
+        clearTimeout(initial);
+        if (pollingRef.current) {
+          clearInterval(pollingRef.current);
+          pollingRef.current = null;
+        }
+      };
     }
     return () => {
       if (pollingRef.current) {
@@ -71,10 +78,12 @@ export function FeedbackDisplay({ isRunning }: FeedbackDisplayProps) {
   }, [isRunning, pollFeedback]);
 
   useEffect(() => {
-    if (!isRunning) {
+    if (isRunning) return;
+    const reset = setTimeout(() => {
       setMaxMu(1);
       setFeedback(EMPTY_FEEDBACK);
-    }
+    }, 0);
+    return () => clearTimeout(reset);
   }, [isRunning]);
 
   const c3Intensity = powerToIntensity(feedback.channels.C3.mu_power, maxMu);

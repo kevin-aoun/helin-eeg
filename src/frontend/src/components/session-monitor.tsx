@@ -72,7 +72,10 @@ export function SessionMonitor({ status }: SessionMonitorProps) {
   const [liveElapsed, setLiveElapsed] = useState(status.elapsed_seconds);
 
   useEffect(() => {
-    setLiveElapsed(status.elapsed_seconds);
+    const sync = setTimeout(() => {
+      setLiveElapsed(status.elapsed_seconds);
+    }, 0);
+    return () => clearTimeout(sync);
   }, [status.elapsed_seconds]);
 
   useEffect(() => {

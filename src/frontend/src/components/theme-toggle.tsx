@@ -8,7 +8,10 @@ export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    const mountedTimer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(mountedTimer);
+  }, []);
 
   if (!mounted) {
     return <Button variant="ghost" size="icon" className="h-8 w-8" />;

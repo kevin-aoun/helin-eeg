@@ -64,6 +64,96 @@ export interface LSLStream {
   source_id: string;
 }
 
+// ── Signal Viewer Types ──────────────────────────────────────────────
+
+export interface RecordingRun {
+  id: string;
+  filename: string;
+  path: string;
+  size: number;
+}
+
+export interface RecordingSession {
+  id: string;
+  runs: RecordingRun[];
+}
+
+export interface RecordingSubject {
+  id: string;
+  sessions: RecordingSession[];
+}
+
+export interface RecordingsIndex {
+  subjects: RecordingSubject[];
+}
+
+export interface XDFMarker {
+  time: number;
+  label: string;
+}
+
+export interface XDFData {
+  channels: string[];
+  srate: number;
+  duration: number;
+  total_samples: number;
+  samples_returned: number;
+  eeg: Record<string, number[]>;
+  markers: XDFMarker[];
+}
+
+export interface PredictionSegment {
+  segment_number: number;
+  start_time: number;
+  end_time: number;
+  expected: number;
+  expected_name: string;
+  predicted: number;
+  predicted_name: string;
+  confidence: number;
+  probabilities: Record<"left" | "right" | "rest", number>;
+  graph_time: number[];
+  graph_channels: number[][];
+  is_valid: boolean;
+}
+
+export interface PredictionWindow {
+  window_number: number;
+  start_time: number;
+  end_time: number;
+  expected: number;
+  expected_name: string;
+  predicted: number;
+  predicted_name: string;
+  confidence: number;
+  probabilities: Record<"left" | "right" | "rest", number>;
+  command: "L" | "R" | "S" | string;
+  command_duration_sec: number;
+  segments: PredictionSegment[];
+  duration: number;
+  correct: boolean;
+}
+
+export interface PredictionSummary {
+  windows: number;
+  scored_windows: number;
+  correct: number;
+  accuracy: number;
+  window_size_sec: number;
+  command_duration_sec: number;
+}
+
+export interface PredictionResponse {
+  summary: PredictionSummary;
+  windows: PredictionWindow[];
+}
+
+export interface MarkerTypeConfig {
+  label: string;
+  color: string;
+  group: string;
+}
+
 export const DEFAULT_CONFIG: ExperimentConfig = {
   participant_id: "",
   session_number: 1,

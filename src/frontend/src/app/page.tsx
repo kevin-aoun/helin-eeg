@@ -1,241 +1,79 @@
-"use client";
-
-import { useState, useEffect, useCallback, useRef } from "react";
-import { Header } from "@/components/header";
-import { ConfigForm } from "@/components/config-form";
-import { ProtocolReference } from "@/components/protocol-reference";
-import { SessionMonitor } from "@/components/session-monitor";
-import { FeedbackDisplay } from "@/components/feedback-display";
+import Link from "next/link";
+import { Activity, ArrowRight, BrainCircuit, Database, RadioTower } from "lucide-react";
+import { AppTopBar } from "@/components/app-top-bar";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Card, CardContent } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 import {
-  DEFAULT_CONFIG,
-  type ExperimentConfig,
-  type SessionStatus,
-} from "@/lib/types";
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
-const IDLE_STATUS: SessionStatus = {
-  state: "idle",
-  phase: "none",
-  current_trial: 0,
-  total_trials: 0,
-  current_block: 0,
-  total_blocks: 0,
-  bad_trials: 0,
-  elapsed_seconds: 0,
-  output_file: "",
-};
+const MODES = [
+  {
+    href: "/collection",
+    title: "Collection",
+    description: "Run the motor-imagery protocol, emit LSL markers, and record synchronized EEG with LabRecorder.",
+    icon: Activity,
+  },
+  {
+    href: "/viewer",
+    title: "Visualization",
+    description: "Load XDF recordings, inspect channels, markers, timing, and signal quality.",
+    icon: Database,
+  },
+  {
+    href: "/inference",
+    title: "Inference",
+    description: "Classify recorded MI windows, review predictions, and send rover commands over Bluetooth.",
+    icon: BrainCircuit,
+  },
+];
 
 export default function Home() {
-  const [config, setConfig] = useState<ExperimentConfig>(DEFAULT_CONFIG);
-
-  // Load saved defaults after mount to avoid SSR hydration mismatch
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("helin-defaults");
-      if (raw) {
-        const saved = JSON.parse(raw);
-        setConfig((prev) => ({
-          ...prev,
-          colors: saved.colors ?? prev.colors,
-          timing: saved.timing ?? prev.timing,
-          blocks: saved.blocks ?? prev.blocks,
-        }));
-      }
-    } catch { /* ignore */ }
-  }, []);
-  const [status, setStatus] = useState<SessionStatus>(IDLE_STATUS);
-  const [isRunning, setIsRunning] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [starting, setStarting] = useState(false);
-  const pollingRef = useRef<NodeJS.Timeout | null>(null);
-
-  const pollStatus = useCallback(async () => {
-    try {
-      const res = await fetch("/api/status", { cache: "no-store" });
-      if (res.ok) {
-        const data: SessionStatus = await res.json();
-        setStatus(data);
-
-        if (data.state === "completed" || data.state === "aborted") {
-          setIsRunning(false);
-          if (pollingRef.current) {
-            clearInterval(pollingRef.current);
-            pollingRef.current = null;
-          }
-        }
-      }
-    } catch {
-      // Ignore fetch errors during polling
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isRunning && !pollingRef.current) {
-      pollingRef.current = setInterval(pollStatus, 500);
-    }
-    return () => {
-      if (pollingRef.current) {
-        clearInterval(pollingRef.current);
-        pollingRef.current = null;
-      }
-    };
-  }, [isRunning, pollStatus]);
-
-  // When tab becomes visible again, poll immediately (browsers throttle background tabs)
-  useEffect(() => {
-    function onVisible() {
-      if (document.visibilityState === "visible" && isRunning) {
-        pollStatus();
-      }
-    }
-    document.addEventListener("visibilitychange", onVisible);
-    return () => document.removeEventListener("visibilitychange", onVisible);
-  }, [isRunning, pollStatus]);
-
-  async function handleStart() {
-    if (!config.participant_id.trim()) {
-      setError("Participant ID is required");
-      return;
-    }
-    if (config.blocks.trials_per_block % 2 !== 0) {
-      setError("Trials per block must be even (balanced left/right)");
-      return;
-    }
-    if (config.timing.rest_min >= config.timing.rest_max) {
-      setError("Rest Min must be less than Rest Max");
-      return;
-    }
-
-    setError(null);
-    setStatus(IDLE_STATUS);
-    setStarting(true);
-
-    try {
-      const res = await fetch("/api/start", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(config),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "Failed to start session");
-        setStarting(false);
-        return;
-      }
-
-      setIsRunning(true);
-    } catch {
-      setError("Failed to connect to server");
-    }
-    setStarting(false);
-  }
-
-  async function handleStop() {
-    try {
-      await fetch("/api/start", { method: "DELETE" });
-      setIsRunning(false);
-      if (pollingRef.current) {
-        clearInterval(pollingRef.current);
-        pollingRef.current = null;
-      }
-      await pollStatus();
-    } catch {
-      setError("Failed to stop session");
-    }
-  }
-
-  function handleReset() {
-    setStatus(IDLE_STATUS);
-    setIsRunning(false);
-    setError(null);
-  }
-
-  const sessionDone =
-    status.state === "completed" || status.state === "aborted";
-
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Header frequency={config.device_frequency} isRunning={isRunning} />
+    <div className="min-h-screen bg-background">
+      <AppTopBar title="HELIN" subtitle="Control Center" maxWidthClassName="max-w-6xl">
+        <RadioTower className="h-4 w-4 text-muted-foreground" />
+      </AppTopBar>
 
-      <main className="flex-1 px-4 py-6 max-w-7xl mx-auto w-full">
-        <div className="grid grid-cols-[1fr_300px] gap-4 items-start">
-          {/* Left: config + actions */}
-          <div className="space-y-2">
-            <ConfigForm
-              config={config}
-              onChange={setConfig}
-              disabled={isRunning}
-            />
+      <main className="max-w-6xl mx-auto px-4 py-8">
+        <div className="mb-6">
+          <h2 className="text-2xl font-semibold tracking-tight">Select Workspace</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Collection, signal review, and rover inference are separated so each workflow stays focused.
+          </p>
+        </div>
 
-            <ProtocolReference config={config} />
-          </div>
-
-          {/* Right: session monitor + notes + actions */}
-          <div className="sticky top-6 space-y-2">
-            <SessionMonitor status={status} />
-            <FeedbackDisplay isRunning={isRunning} />
-            <Card className="py-3 gap-2">
-              <CardContent>
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Session Notes</p>
-                <Textarea
-                  placeholder="Electrode placement, impedance, participant alertness..."
-                  value={config.notes}
-                  onChange={(e) => setConfig({ ...config, notes: e.target.value })}
-                  disabled={isRunning}
-                  className="text-sm min-h-[100px] resize-none"
-                  rows={4}
-                />
-              </CardContent>
-            </Card>
-
-            {/* Action buttons */}
-            <div className="space-y-2">
-              {!isRunning && !sessionDone && (
-                <Button
-                  onClick={handleStart}
-                  disabled={starting}
-                  className="w-full"
-                >
-                  {starting ? "Starting..." : "Start Session"}
-                </Button>
-              )}
-              {isRunning && (
-                <Button
-                  onClick={handleStop}
-                  variant="destructive"
-                  className="w-full"
-                >
-                  Stop Session
-                </Button>
-              )}
-              {sessionDone && (
-                <Button
-                  onClick={handleReset}
-                  variant="outline"
-                  className="w-full"
-                >
-                  New Session
-                </Button>
-              )}
-
-              {error && (
-                <Alert variant="destructive" className="py-2">
-                  <AlertDescription className="text-xs">{error}</AlertDescription>
-                </Alert>
-              )}
-
-              {!isRunning && !sessionDone && !error && (
-                <p className="text-xs text-muted-foreground text-center">
-                  Make sure LabRecorder is running and recording both streams.
-                </p>
-              )}
-            </div>
-          </div>
+        <div className="grid gap-3 md:grid-cols-3">
+          {MODES.map((mode) => {
+            const Icon = mode.icon;
+            return (
+              <Card key={mode.href} className="gap-4 rounded-md py-4 transition-colors hover:bg-accent/30">
+                <CardHeader className="px-4">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-md border bg-background">
+                      <Icon className="h-4 w-4 text-muted-foreground" />
+                    </span>
+                    <CardTitle className="text-base">{mode.title}</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="px-4">
+                  <CardDescription className="leading-relaxed">{mode.description}</CardDescription>
+                </CardContent>
+                <CardFooter className="px-4">
+                  <Button asChild size="sm" className="w-full">
+                    <Link href={mode.href}>
+                      Open
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </Button>
+                </CardFooter>
+              </Card>
+            );
+          })}
         </div>
       </main>
     </div>
